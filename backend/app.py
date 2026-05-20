@@ -6,8 +6,7 @@ from datetime import date
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:hotside775@localhost:5432/votufacil'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://neondb_owner:npg_4SDKP6hEwBqL@ep-still-sunset-apbx2x43.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
