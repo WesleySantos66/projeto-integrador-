@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VotuFácil - Detalhes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #2563eb;
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .btn-voltar {
+            background: white;
+            color: #2563eb;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .conteudo {
+            max-width: 800px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        .card-detalhe {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        .card-detalhe h2 {
+            color: #1e293b;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .info-linha {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+            color: #374151;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .info-linha .icone {
+            font-size: 1.1rem;
+            min-width: 24px;
+        }
+
+        .info-linha a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .secao-titulo {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* COMENTÁRIOS */
+        .comentario-item {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border-left: 3px solid #2563eb;
+        }
+
+        .comentario-item p {
+            color: #374151;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .comentario-item span {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            display: block;
+            margin-top: 6px;
+        }
+
+        .form-comentario textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 100px;
+            outline: none;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .form-comentario textarea:focus {
+            border-color: #2563eb;
+        }
+
+        .btn-comentar {
+            margin-top: 10px;
+            padding: 10px 24px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-comentar:hover {
+            background: #1d4ed8;
+        }
+
+        .msg-comentario {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .msg-comentario.sucesso {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .msg-comentario.erro {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .sem-comentarios {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .mapa-container {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .mapa-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 onclick="window.location.href='index.html'">📍 VotuFácil</h1>
+    <button class="btn-voltar" onclick="window.location.href='index.html'">← Voltar</button>
+</header>
+
+<div class="conteudo">
+    <div id="conteudo-local">
+        <div class="loading">Carregando informações...</div>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:5000';
+
+    // Pega o ID da URL
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+
+    if (!id) {
+        window.location.href = 'index.html';
+    }
+
+async function carregarLocal() {
+    try {
+        const [resLocal, resComentarios, resHorarios] = await Promise.all([
+            fetch(`${API}/locais/${id}`),
+            fetch(`${API}/locais/${id}/comentarios`),
+            fetch(`${API}/locais/${id}/horarios`)
+        ]);
+
+        const local = await resLocal.json();
+        const comentarios = await resComentarios.json();
+        const horarios = await resHorarios.json();
+
+        renderizarLocal(local, comentarios, horarios);
+    } catch (e) {
+        document.getElementById('conteudo-local').innerHTML = `
+            <div class="loading">⚠️ Erro ao carregar. Verifique se o back-end está rodando.</div>`;
+    }
+}
+function renderizarLocal(local, comentarios, horarios) {
+    const mapaUrl = local.latitude && local.longitude
+        ? `https://maps.google.com/maps?q=${local.latitude},${local.longitude}&z=16&output=embed`
+        : null;
+
+    document.getElementById('conteudo-local').innerHTML = `
+        <!-- Informações principais -->
+        <div class="card-detalhe">
+            <h2>📍 ${local.nome}</h2>
+
+            ${local.descricao ? `
+            <div class="info-linha">
+                <span class="icone">📋</span>
+                <span>${local.descricao}</span>
+            </div>` : ''}
+
+            ${local.endereco ? `
+            <div class="info-linha">
+                <span class="icone">📌</span>
+                <span>${local.endereco}</span>
+            </div>` : ''}
+
+            ${local.telefone ? `
+            <div class="info-linha">
+                <span class="icone">📞</span>
+                <a href="tel:${local.telefone}">${local.telefone}</a>
+            </div>` : ''}
+
+            ${local.email ? `
+            <div class="info-linha">
+                <span class="icone">✉️</span>
+                <a href="mailto:${local.email}">${local.email}</a>
+            </div>` : ''}
+        </div>
+
+        <!-- HORÁRIOS -->
+        ${horarios.length > 0 ? `
+        <div class="card-detalhe">
+            <div class="secao-titulo">🕐 Horários de funcionamento</div>
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f8fafc;">
+                        <th style="padding:10px 14px; text-align:left; color:#64748b; font-size:0.85rem; border-bottom:1px solid #e2e8f0;">Dia</th>
+                        <th style="padding:10px 14px; text-align:left; color:#64748b; font-size:0.85rem; border-bottom:1px solid #e2e8f0;">Abertura</th>
+                        <th style="padding:10px 14px; text-align:left; color:#64748b; font-size:0.85rem; border-bottom:1px solid #e2e8f0;">Fechamento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${horarios.map(h => `
+                    <tr>
+                        <td style="padding:10px 14px; color:#374151; font-size:0.9rem; border-bottom:1px solid #f1f5f9;">${h.dia_semana}</td>
+                        <td style="padding:10px 14px; color:#374151; font-size:0.9rem; border-bottom:1px solid #f1f5f9;">${h.horario_abertura}</td>
+                        <td style="padding:10px 14px; color:#374151; font-size:0.9rem; border-bottom:1px solid #f1f5f9;">${h.horario_fechamento}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>` : ''}
+
+        <!-- Mapa -->
+        ${mapaUrl ? `
+        <div class="card-detalhe">
+            <div class="secao-titulo">🗺️ Localização no mapa</div>
+            <div class="mapa-container">
+                <iframe src="${mapaUrl}" allowfullscreen loading="lazy"></iframe>
+            </div>
+        </div>` : ''}
+
+        <!-- Comentários -->
+        <div class="card-detalhe">
+            <div class="secao-titulo">💬 Comentários (${comentarios.length})</div>
+            <div id="lista-comentarios">
+                ${comentarios.length === 0
+                    ? '<p class="sem-comentarios">Nenhum comentário ainda. Seja o primeiro!</p>'
+                    : comentarios.map(c => `
+                        <div class="comentario-item">
+                            <p>${c.texto}</p>
+                            <span>${c.data}</span>
+                        </div>`).join('')
+                }
+            </div>
+            <div class="form-comentario" style="margin-top: 20px;">
+                <div class="secao-titulo">✍️ Deixar um comentário</div>
+                <textarea id="texto-comentario" placeholder="Compartilhe sua experiência com este local..."></textarea>
+                <button class="btn-comentar" onclick="enviarComentario()">Enviar comentário</button>
+                <div id="msg-comentario" class="msg-comentario"></div>
+            </div>
+        </div>
+    `;
+}
+
+    async function enviarComentario() {
+        const texto = document.getElementById('texto-comentario').value;
+        const msg = document.getElementById('msg-comentario');
+
+        if (!texto.trim()) {
+            msg.className = 'msg-comentario erro';
+            msg.style.display = 'block';
+            msg.textContent = 'Escreva um comentário antes de enviar.';
+            return;
+        }
+
+        try {
+            const resposta = await fetch(`${API}/locais/${id}/comentarios`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ texto, id_usuario: 1 })
+            });
+
+            if (resposta.ok) {
+                msg.className = 'msg-comentario sucesso';
+                msg.style.display = 'block';
+                msg.textContent = 'Comentário enviado com sucesso!';
+                document.getElementById('texto-comentario').value = '';
+                setTimeout(() => carregarLocal(), 1500);
+            }
+        } catch (e) {
+            msg.className = 'msg-comentario erro';
+            msg.style.display = 'block';
+            msg.textContent = 'Erro ao enviar comentário.';
+        }
+    }
+
+    carregarLocal();
+</script>
+
+</body>
+</html>

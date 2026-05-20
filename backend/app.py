@@ -1,9 +1,11 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:hotside775@localhost:5432/votufacil'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -39,6 +41,15 @@ class LocalServico(db.Model):
     email = db.Column(db.String(100))
     id_responsavel = db.Column(db.Integer, db.ForeignKey('usuario.id_usuario'))
 
+class HorarioFuncionamento(db.Model):
+    __tablename__ = 'horario_funcionamento'
+    id_horario = db.Column(db.Integer, primary_key=True)
+    dia_semana = db.Column(db.String(20))
+    horario_abertura = db.Column(db.String(10))
+    horario_fechamento = db.Column(db.String(10))
+    tipo_horario = db.Column(db.String(20))
+    id_local = db.Column(db.Integer, db.ForeignKey('local_servico.id_local'))
+
 class Comentario(db.Model):
     __tablename__ = 'comentario'
     id_comentario = db.Column(db.Integer, primary_key=True)
@@ -52,15 +63,11 @@ class Comentario(db.Model):
 # ROTAS — USUÁRIOS
 # ========================
 
-# Cadastrar usuário
 @app.route('/usuarios/cadastro', methods=['POST'])
 def cadastrar_usuario():
     dados = request.get_json()
-
-    # Verifica se email já existe
     if Usuario.query.filter_by(email=dados['email']).first():
         return jsonify({'erro': 'Email já cadastrado!'}), 400
-
     novo_usuario = Usuario(
         nome=dados['nome'],
         email=dados['email'],
@@ -71,15 +78,12 @@ def cadastrar_usuario():
     db.session.commit()
     return jsonify({'mensagem': 'Usuário cadastrado com sucesso!', 'id': novo_usuario.id_usuario}), 201
 
-# Login
 @app.route('/usuarios/login', methods=['POST'])
 def login():
     dados = request.get_json()
     usuario = Usuario.query.filter_by(email=dados['email']).first()
-
     if not usuario or not check_password_hash(usuario.senha_hash, dados['senha']):
         return jsonify({'erro': 'Email ou senha incorretos!'}), 401
-
     return jsonify({
         'mensagem': 'Login realizado com sucesso!',
         'id': usuario.id_usuario,
@@ -87,7 +91,6 @@ def login():
         'tipo_perfil': usuario.tipo_perfil
     })
 
-# Listar usuários
 @app.route('/usuarios', methods=['GET'])
 def listar_usuarios():
     usuarios = Usuario.query.all()
@@ -105,18 +108,15 @@ def listar_usuarios():
 @app.route('/locais', methods=['GET'])
 def listar_locais():
     locais = LocalServico.query.all()
-    resultado = []
-    for local in locais:
-        resultado.append({
-            'id': local.id_local,
-            'nome': local.nome,
-            'descricao': local.descricao,
-            'endereco': local.endereco,
-            'telefone': local.telefone,
-            'latitude': local.latitude,
-            'longitude': local.longitude
-        })
-    return jsonify(resultado)
+    return jsonify([{
+        'id': local.id_local,
+        'nome': local.nome,
+        'descricao': local.descricao,
+        'endereco': local.endereco,
+        'telefone': local.telefone,
+        'latitude': local.latitude,
+        'longitude': local.longitude
+    } for local in locais])
 
 @app.route('/locais/<int:id>', methods=['GET'])
 def detalhe_local(id):
@@ -127,6 +127,7 @@ def detalhe_local(id):
         'descricao': local.descricao,
         'endereco': local.endereco,
         'telefone': local.telefone,
+        'email': local.email,
         'latitude': local.latitude,
         'longitude': local.longitude
     })
@@ -139,19 +140,90 @@ def cadastrar_local():
         descricao=dados.get('descricao'),
         endereco=dados.get('endereco'),
         telefone=dados.get('telefone'),
+        email=dados.get('email'),
         latitude=dados.get('latitude'),
         longitude=dados.get('longitude')
     )
     db.session.add(novo_local)
+    db.session.flush()
+    for h in dados.get('horarios', []):
+        db.session.add(HorarioFuncionamento(
+            dia_semana=h['dia_semana'],
+            horario_abertura=h['horario_abertura'],
+            horario_fechamento=h['horario_fechamento'],
+            tipo_horario=h.get('tipo_horario', 'normal'),
+            id_local=novo_local.id_local
+        ))
     db.session.commit()
     return jsonify({'mensagem': 'Local cadastrado com sucesso!', 'id': novo_local.id_local}), 201
 
+@app.route('/locais/<int:id>', methods=['PUT'])
+def atualizar_local(id):
+    local = LocalServico.query.get_or_404(id)
+    dados = request.get_json()
+    local.nome = dados.get('nome', local.nome)
+    local.descricao = dados.get('descricao', local.descricao)
+    local.endereco = dados.get('endereco', local.endereco)
+    local.telefone = dados.get('telefone', local.telefone)
+    local.email = dados.get('email', local.email)
+    local.latitude = dados.get('latitude', local.latitude)
+    local.longitude = dados.get('longitude', local.longitude)
+    if 'horarios' in dados:
+        HorarioFuncionamento.query.filter_by(id_local=id).delete()
+        for h in dados['horarios']:
+            db.session.add(HorarioFuncionamento(
+                dia_semana=h['dia_semana'],
+                horario_abertura=h['horario_abertura'],
+                horario_fechamento=h['horario_fechamento'],
+                tipo_horario=h.get('tipo_horario', 'normal'),
+                id_local=id
+            ))
+    db.session.commit()
+    return jsonify({'mensagem': 'Local atualizado com sucesso!'})
+
 @app.route('/locais/<int:id>', methods=['DELETE'])
 def deletar_local(id):
+    HorarioFuncionamento.query.filter_by(id_local=id).delete()
     local = LocalServico.query.get_or_404(id)
     db.session.delete(local)
     db.session.commit()
     return jsonify({'mensagem': 'Local removido com sucesso!'})
+
+# ========================
+# ROTAS — HORÁRIOS
+# ========================
+
+@app.route('/locais/<int:id>/horarios', methods=['GET'])
+def listar_horarios(id):
+    horarios = HorarioFuncionamento.query.filter_by(id_local=id).all()
+    return jsonify([{
+        'id': h.id_horario,
+        'dia_semana': h.dia_semana,
+        'horario_abertura': h.horario_abertura,
+        'horario_fechamento': h.horario_fechamento,
+        'tipo_horario': h.tipo_horario
+    } for h in horarios])
+
+@app.route('/locais/<int:id>/horarios', methods=['POST'])
+def adicionar_horario(id):
+    dados = request.get_json()
+    novo = HorarioFuncionamento(
+        dia_semana=dados['dia_semana'],
+        horario_abertura=dados['horario_abertura'],
+        horario_fechamento=dados['horario_fechamento'],
+        tipo_horario=dados.get('tipo_horario', 'normal'),
+        id_local=id
+    )
+    db.session.add(novo)
+    db.session.commit()
+    return jsonify({'mensagem': 'Horário adicionado!', 'id': novo.id_horario}), 201
+
+@app.route('/horarios/<int:id>', methods=['DELETE'])
+def deletar_horario(id):
+    horario = HorarioFuncionamento.query.get_or_404(id)
+    db.session.delete(horario)
+    db.session.commit()
+    return jsonify({'mensagem': 'Horário removido!'})
 
 # ========================
 # ROTAS — CATEGORIAS

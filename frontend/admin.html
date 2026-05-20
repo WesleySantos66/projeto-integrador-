@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VotuFácil - Administração</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+        body { background: #f0f4f8; min-height: 100vh; }
+
+        header {
+            background: #2563eb;
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 { font-size: 1.5rem; cursor: pointer; }
+
+        .header-direita { display: flex; align-items: center; gap: 16px; }
+
+        .badge-admin {
+            background: #fbbf24;
+            color: #1e293b;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .btn-header {
+            background: white;
+            color: #2563eb;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .conteudo { max-width: 1100px; margin: 32px auto; padding: 0 24px; }
+
+        .topo-secao {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .topo-secao h2 { color: #1e293b; font-size: 1.3rem; }
+
+        .btn-novo {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .btn-novo:hover { background: #1d4ed8; }
+
+        /* TABELA */
+        .tabela-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            overflow: hidden;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead { background: #f8fafc; }
+
+        th {
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 600;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        td {
+            padding: 14px 16px;
+            font-size: 0.9rem;
+            color: #374151;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8fafc; }
+
+        .acoes { display: flex; gap: 8px; }
+
+        .btn-editar {
+            background: #eff6ff;
+            color: #2563eb;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .btn-excluir {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.aberto { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .modal h3 {
+            color: #1e293b;
+            font-size: 1.2rem;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .form-grupo { margin-bottom: 16px; }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #374151;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        input:focus, textarea:focus { border-color: #2563eb; }
+
+        .form-linha { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* HORÁRIOS */
+        .secao-horarios {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .secao-horarios h4 {
+            color: #1e293b;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+
+        .horario-item {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .horario-item input {
+            padding: 8px 10px;
+            font-size: 0.85rem;
+        }
+
+        .btn-remover-horario {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-add-horario {
+            background: #eff6ff;
+            color: #2563eb;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .modal-acoes {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancelar {
+            background: #f1f5f9;
+            color: #64748b;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-salvar {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-salvar:hover { background: #1d4ed8; }
+
+        .mensagem {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .mensagem.sucesso { background: #dcfce7; color: #166534; }
+        .mensagem.erro { background: #fee2e2; color: #991b1b; }
+
+        .acesso-negado {
+            text-align: center;
+            padding: 80px 20px;
+            color: #94a3b8;
+        }
+
+        .acesso-negado h2 { font-size: 1.5rem; margin-bottom: 12px; color: #64748b; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 onclick="window.location.href='index.html'">📍 VotuFácil</h1>
+    <div class="header-direita">
+        <span class="badge-admin">⚙️ Administrador</span>
+        <span id="nome-usuario" style="color:white; font-size:0.9rem;"></span>
+        <button class="btn-header" onclick="sair()">Sair</button>
+    </div>
+</header>
+
+<div class="conteudo" id="conteudo-admin">
+    <div class="acesso-negado">
+        <h2>🔒 Verificando acesso...</h2>
+    </div>
+</div>
+
+<!-- MODAL CADASTRO/EDIÇÃO -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <h3 id="modal-titulo">Cadastrar novo local</h3>
+
+        <div class="form-grupo">
+            <label>Nome do local *</label>
+            <input type="text" id="f-nome" placeholder="Ex: Centro de Zoonoses">
+        </div>
+        <div class="form-grupo">
+            <label>Descrição</label>
+            <textarea id="f-descricao" rows="3" placeholder="Descreva o local e seus serviços..."></textarea>
+        </div>
+        <div class="form-grupo">
+            <label>Endereço</label>
+            <input type="text" id="f-endereco" placeholder="Ex: R. Orlando Commar, 500 - Votuporanga - SP">
+        </div>
+        <div class="form-linha">
+            <div class="form-grupo">
+                <label>Telefone</label>
+                <input type="text" id="f-telefone" placeholder="(17) 3422-8810">
+            </div>
+            <div class="form-grupo">
+                <label>E-mail</label>
+                <input type="email" id="f-email" placeholder="contato@local.com">
+            </div>
+        </div>
+        <div class="form-linha">
+            <div class="form-grupo">
+                <label>Latitude</label>
+                <input type="number" id="f-latitude" placeholder="-20.38438" step="any">
+            </div>
+            <div class="form-grupo">
+                <label>Longitude</label>
+                <input type="number" id="f-longitude" placeholder="-49.99009" step="any">
+            </div>
+        </div>
+
+        <!-- HORÁRIOS -->
+        <div class="secao-horarios">
+            <h4>🕐 Horários de funcionamento</h4>
+            <div id="lista-horarios"></div>
+            <button class="btn-add-horario" onclick="adicionarHorario()">+ Adicionar horário</button>
+        </div>
+
+        <div id="msg-modal" class="mensagem"></div>
+
+        <div class="modal-acoes">
+            <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-salvar" onclick="salvarLocal()">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:5000';
+    let localEditandoId = null;
+    let horariosCount = 0;
+
+    // Verificar se é admin
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+
+    if (!usuario.id || usuario.tipo_perfil !== 'admin') {
+        document.getElementById('conteudo-admin').innerHTML = `
+            <div class="acesso-negado">
+                <h2>🔒 Acesso negado</h2>
+                <p>Apenas administradores podem acessar esta página.</p>
+                <br>
+                <button onclick="window.location.href='login.html'" style="background:#2563eb;color:white;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-weight:600;">
+                    Fazer login
+                </button>
+            </div>`;
+    } else {
+        document.getElementById('nome-usuario').textContent = `Olá, ${usuario.nome}`;
+        carregarPagina();
+    }
+
+    function sair() {
+        localStorage.removeItem('usuario');
+        window.location.href = 'login.html';
+    }
+
+    async function carregarPagina() {
+        document.getElementById('conteudo-admin').innerHTML = `
+            <div class="topo-secao">
+                <h2>📍 Gerenciar Locais e Serviços</h2>
+                <button class="btn-novo" onclick="abrirModalNovo()">+ Novo local</button>
+            </div>
+            <div class="tabela-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Endereço</th>
+                            <th>Telefone</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-locais">
+                        <tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:30px;">Carregando...</td></tr>
+                    </tbody>
+                </table>
+            </div>`;
+
+        await carregarLocais();
+    }
+
+    async function carregarLocais() {
+        try {
+            const res = await fetch(`${API}/locais`);
+            const locais = await res.json();
+            const tbody = document.getElementById('tabela-locais');
+
+            if (locais.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:30px;">Nenhum local cadastrado ainda.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = locais.map(local => `
+                <tr>
+                    <td><strong>${local.nome}</strong></td>
+                    <td>${local.endereco || '—'}</td>
+                    <td>${local.telefone || '—'}</td>
+                    <td>
+                        <div class="acoes">
+                            <button class="btn-editar" onclick="abrirModalEditar(${local.id})">✏️ Editar</button>
+                            <button class="btn-excluir" onclick="excluirLocal(${local.id}, '${local.nome}')">🗑️ Excluir</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            document.getElementById('tabela-locais').innerHTML =
+                `<tr><td colspan="4" style="text-align:center;color:#dc2626;padding:30px;">Erro ao conectar com o servidor.</td></tr>`;
+        }
+    }
+
+    function abrirModalNovo() {
+        localEditandoId = null;
+        document.getElementById('modal-titulo').textContent = 'Cadastrar novo local';
+        document.getElementById('f-nome').value = '';
+        document.getElementById('f-descricao').value = '';
+        document.getElementById('f-endereco').value = '';
+        document.getElementById('f-telefone').value = '';
+        document.getElementById('f-email').value = '';
+        document.getElementById('f-latitude').value = '';
+        document.getElementById('f-longitude').value = '';
+        document.getElementById('lista-horarios').innerHTML = '';
+        document.getElementById('msg-modal').style.display = 'none';
+        horariosCount = 0;
+        document.getElementById('modal-overlay').classList.add('aberto');
+    }
+
+    async function abrirModalEditar(id) {
+        localEditandoId = id;
+        document.getElementById('modal-titulo').textContent = 'Editar local';
+        document.getElementById('msg-modal').style.display = 'none';
+
+        try {
+            const [resLocal, resHorarios] = await Promise.all([
+                fetch(`${API}/locais/${id}`),
+                fetch(`${API}/locais/${id}/horarios`)
+            ]);
+
+            const local = await resLocal.json();
+            const horarios = await resHorarios.json();
+
+            document.getElementById('f-nome').value = local.nome || '';
+            document.getElementById('f-descricao').value = local.descricao || '';
+            document.getElementById('f-endereco').value = local.endereco || '';
+            document.getElementById('f-telefone').value = local.telefone || '';
+            document.getElementById('f-email').value = local.email || '';
+            document.getElementById('f-latitude').value = local.latitude || '';
+            document.getElementById('f-longitude').value = local.longitude || '';
+
+            document.getElementById('lista-horarios').innerHTML = '';
+            horariosCount = 0;
+            horarios.forEach(h => adicionarHorario(h.dia_semana, h.horario_abertura, h.horario_fechamento, h.tipo_horario));
+
+            document.getElementById('modal-overlay').classList.add('aberto');
+        } catch (e) {
+            alert('Erro ao carregar dados do local.');
+        }
+    }
+
+    function adicionarHorario(dia='', abertura='', fechamento='', tipo='normal') {
+        const id = horariosCount++;
+        const div = document.createElement('div');
+        div.className = 'horario-item';
+        div.id = `horario-${id}`;
+        div.innerHTML = `
+            <input type="text" placeholder="Ex: Seg a Sex" value="${dia}" id="h-dia-${id}">
+            <input type="time" value="${abertura}" id="h-abertura-${id}">
+            <input type="time" value="${fechamento}" id="h-fechamento-${id}">
+            <button class="btn-remover-horario" onclick="removerHorario(${id})">✕</button>
+        `;
+        document.getElementById('lista-horarios').appendChild(div);
+    }
+
+    function removerHorario(id) {
+        document.getElementById(`horario-${id}`).remove();
+    }
+
+    function fecharModal() {
+        document.getElementById('modal-overlay').classList.remove('aberto');
+    }
+
+    async function salvarLocal() {
+        const nome = document.getElementById('f-nome').value.trim();
+        const msg = document.getElementById('msg-modal');
+
+        if (!nome) {
+            msg.className = 'mensagem erro';
+            msg.style.display = 'block';
+            msg.textContent = 'O nome do local é obrigatório!';
+            return;
+        }
+
+        // Coleta horários
+        const horarios = [];
+        document.querySelectorAll('.horario-item').forEach(item => {
+            const idH = item.id.replace('horario-', '');
+            const dia = document.getElementById(`h-dia-${idH}`)?.value;
+            const abertura = document.getElementById(`h-abertura-${idH}`)?.value;
+            const fechamento = document.getElementById(`h-fechamento-${idH}`)?.value;
+            if (dia && abertura && fechamento) {
+                horarios.push({ dia_semana: dia, horario_abertura: abertura, horario_fechamento: fechamento, tipo_horario: 'normal' });
+            }
+        });
+
+        const dados = {
+            nome,
+            descricao: document.getElementById('f-descricao').value,
+            endereco: document.getElementById('f-endereco').value,
+            telefone: document.getElementById('f-telefone').value,
+            email: document.getElementById('f-email').value,
+            latitude: parseFloat(document.getElementById('f-latitude').value) || null,
+            longitude: parseFloat(document.getElementById('f-longitude').value) || null,
+            horarios
+        };
+
+        try {
+            const url = localEditandoId ? `${API}/locais/${localEditandoId}` : `${API}/locais`;
+            const metodo = localEditandoId ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method: metodo,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+
+            const resultado = await res.json();
+
+            if (res.ok) {
+                msg.className = 'mensagem sucesso';
+                msg.style.display = 'block';
+                msg.textContent = localEditandoId ? 'Local atualizado com sucesso!' : 'Local cadastrado com sucesso!';
+                setTimeout(() => {
+                    fecharModal();
+                    carregarLocais();
+                }, 1500);
+            } else {
+                msg.className = 'mensagem erro';
+                msg.style.display = 'block';
+                msg.textContent = resultado.erro || 'Erro ao salvar.';
+            }
+        } catch (e) {
+            msg.className = 'mensagem erro';
+            msg.style.display = 'block';
+            msg.textContent = 'Erro ao conectar com o servidor.';
+        }
+    }
+
+    async function excluirLocal(id, nome) {
+        if (!confirm(`Tem certeza que deseja excluir "${nome}"?`)) return;
+
+        try {
+            const res = await fetch(`${API}/locais/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                carregarLocais();
+            }
+        } catch (e) {
+            alert('Erro ao excluir local.');
+        }
+    }
+</script>
+
+</body>
+</html>

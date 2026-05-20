@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VotuFácil - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #2563eb;
+            font-size: 2rem;
+        }
+
+        .logo p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            color: #64748b;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #374151;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2563eb;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            background: white;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 13px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .mensagem {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .mensagem.sucesso {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .mensagem.erro {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .form-secao {
+            display: none;
+        }
+
+        .form-secao.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="logo">
+        <h1>📍 VotuFácil</h1>
+        <p>Serviços públicos de Votuporanga</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="trocarAba('login')">Entrar</div>
+        <div class="tab" onclick="trocarAba('cadastro')">Cadastrar</div>
+    </div>
+
+    <!-- Formulário de Login -->
+    <div id="form-login" class="form-secao active">
+        <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="login-email" placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="login-senha" placeholder="••••••">
+        </div>
+        <button class="btn" onclick="fazerLogin()">Entrar</button>
+        <div id="msg-login" class="mensagem"></div>
+    </div>
+
+    <!-- Formulário de Cadastro -->
+    <div id="form-cadastro" class="form-secao">
+        <div class="form-group">
+            <label>Nome completo</label>
+            <input type="text" id="cad-nome" placeholder="Seu nome">
+        </div>
+        <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="cad-email" placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="cad-senha" placeholder="••••••">
+        </div>
+        <div class="form-group">
+            <label>Tipo de perfil</label>
+            <select id="cad-perfil">
+                <option value="usuario">Usuário comum</option>
+                <option value="ong">ONG / Repartição Pública</option>
+                <option value="admin">Administrador</option>
+            </select>
+        </div>
+        <button class="btn" onclick="fazerCadastro()">Criar conta</button>
+        <div id="msg-cadastro" class="mensagem"></div>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:5000';
+
+    function trocarAba(aba) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.form-secao').forEach(f => f.classList.remove('active'));
+
+        if (aba === 'login') {
+            document.querySelectorAll('.tab')[0].classList.add('active');
+            document.getElementById('form-login').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab')[1].classList.add('active');
+            document.getElementById('form-cadastro').classList.add('active');
+        }
+    }
+
+    async function fazerLogin() {
+        const email = document.getElementById('login-email').value;
+        const senha = document.getElementById('login-senha').value;
+        const msg = document.getElementById('msg-login');
+
+        try {
+            const resposta = await fetch(`${API}/usuarios/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, senha })
+            });
+
+            const dados = await resposta.json();
+
+            if (resposta.ok) {
+                localStorage.setItem('usuario', JSON.stringify(dados));
+                msg.className = 'mensagem sucesso';
+                msg.style.display = 'block';
+                msg.textContent = `Bem-vindo, ${dados.nome}! Redirecionando...`;
+                setTimeout(() => window.location.href = 'index.html', 1500);
+            } else {
+                msg.className = 'mensagem erro';
+                msg.style.display = 'block';
+                msg.textContent = dados.erro;
+            }
+        } catch (e) {
+            msg.className = 'mensagem erro';
+            msg.style.display = 'block';
+            msg.textContent = 'Erro ao conectar com o servidor.';
+        }
+    }
+
+    async function fazerCadastro() {
+        const nome = document.getElementById('cad-nome').value;
+        const email = document.getElementById('cad-email').value;
+        const senha = document.getElementById('cad-senha').value;
+        const tipo_perfil = document.getElementById('cad-perfil').value;
+        const msg = document.getElementById('msg-cadastro');
+
+        try {
+            const resposta = await fetch(`${API}/usuarios/cadastro`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, email, senha, tipo_perfil })
+            });
+
+            const dados = await resposta.json();
+
+            if (resposta.ok) {
+                msg.className = 'mensagem sucesso';
+                msg.style.display = 'block';
+                msg.textContent = 'Conta criada! Faça login para continuar.';
+                setTimeout(() => trocarAba('login'), 2000);
+            } else {
+                msg.className = 'mensagem erro';
+                msg.style.display = 'block';
+                msg.textContent = dados.erro;
+            }
+        } catch (e) {
+            msg.className = 'mensagem erro';
+            msg.style.display = 'block';
+            msg.textContent = 'Erro ao conectar com o servidor.';
+        }
+    }
+</script>
+
+</body>
+</html>

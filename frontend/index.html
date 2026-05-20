@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VotuFácil - Início</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        header {
+            background: #2563eb;
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+        }
+
+        header span {
+            font-size: 0.9rem;
+            opacity: 0.85;
+        }
+
+        .btn-sair {
+            background: white;
+            color: #2563eb;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        /* BUSCA */
+        .busca-area {
+            background: white;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .busca-area h2 {
+            color: #1e293b;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+        }
+
+        .busca-grupo {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .busca-grupo input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .busca-grupo input:focus {
+            border-color: #2563eb;
+        }
+
+        .btn-buscar {
+            padding: 10px 24px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-buscar:hover {
+            background: #1d4ed8;
+        }
+
+        /* CONTEÚDO */
+        .conteudo {
+            padding: 32px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .titulo-secao {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .titulo-secao h2 {
+            color: #1e293b;
+            font-size: 1.2rem;
+        }
+
+        .total {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        /* GRID DE LOCAIS */
+        .grid-locais {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card-local {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid #2563eb;
+        }
+
+        .card-local:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+
+        .card-local h3 {
+            color: #1e293b;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .card-local p {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            line-height: 1.5;
+        }
+
+        .card-local .telefone {
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #eff6ff;
+            color: #2563eb;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* VAZIO */
+        .vazio {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .vazio p {
+            font-size: 1rem;
+            margin-top: 8px;
+        }
+
+        /* LOADING */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <h1>📍 VotuFácil</h1>
+    <div style="display:flex; align-items:center; gap:16px;">
+        <span id="nome-usuario"></span>
+        <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+</header>
+
+<!-- BUSCA -->
+<div class="busca-area">
+    <h2>🔍 Buscar serviços e locais públicos</h2>
+    <div class="busca-grupo">
+        <input type="text" id="campo-busca" placeholder="Ex: Centro de Zoonoses, Unidade de Saúde..." oninput="buscar()">
+        <button class="btn-buscar" onclick="buscar()">Buscar</button>
+    </div>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="conteudo">
+    <div class="titulo-secao">
+        <h2>Locais e Serviços</h2>
+        <span class="total" id="total-locais"></span>
+    </div>
+    <div id="lista-locais" class="grid-locais">
+        <div class="loading">Carregando locais...</div>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:5000';
+    let todosLocais = [];
+
+    // Verifica se está logado
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (usuario.nome) {
+        document.getElementById('nome-usuario').textContent = `Olá, ${usuario.nome}`;
+    }
+
+    function sair() {
+        localStorage.removeItem('usuario');
+        window.location.href = 'login.html';
+    }
+
+    // Carrega locais da API
+    async function carregarLocais() {
+        try {
+            const resposta = await fetch(`${API}/locais`);
+            todosLocais = await resposta.json();
+            renderizarLocais(todosLocais);
+        } catch (e) {
+            document.getElementById('lista-locais').innerHTML = `
+                <div class="vazio">
+                    <p>⚠️ Não foi possível conectar ao servidor.</p>
+                    <p>Certifique que o back-end está rodando.</p>
+                </div>`;
+        }
+    }
+
+    // Renderiza os cards
+    function renderizarLocais(locais) {
+        const container = document.getElementById('lista-locais');
+        document.getElementById('total-locais').textContent = `${locais.length} local(is) encontrado(s)`;
+
+        if (locais.length === 0) {
+            container.innerHTML = `
+                <div class="vazio">
+                    <p>📭 Nenhum local encontrado.</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = locais.map(local => `
+            <div class="card-local" onclick="verDetalhes(${local.id})">
+                <h3>📍 ${local.nome}</h3>
+                <p>${local.descricao || 'Sem descrição disponível.'}</p>
+                <p>📌 ${local.endereco || 'Endereço não informado'}</p>
+                ${local.telefone ? `<p class="telefone">📞 ${local.telefone}</p>` : ''}
+                <span class="badge">Ver detalhes →</span>
+            </div>
+        `).join('');
+    }
+
+    // Busca local
+    function buscar() {
+        const termo = document.getElementById('campo-busca').value.toLowerCase();
+        const filtrados = todosLocais.filter(local =>
+            local.nome.toLowerCase().includes(termo) ||
+            (local.descricao && local.descricao.toLowerCase().includes(termo)) ||
+            (local.endereco && local.endereco.toLowerCase().includes(termo))
+        );
+        renderizarLocais(filtrados);
+    }
+
+    function verDetalhes(id) {
+        window.location.href = `detalhes.html?id=${id}`;
+    }
+
+    // Inicia
+    carregarLocais();
+</script>
+
+</body>
+</html>
