@@ -229,8 +229,16 @@
     // Verifica se está logado
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     if (usuario.nome) {
-        document.getElementById('nome-usuario').textContent = `Olá, ${usuario.nome}`;
+    document.getElementById('nome-usuario').textContent = `Olá, ${usuario.nome}`;
+    if (usuario.tipo_perfil === 'admin') {
+        document.getElementById('nome-usuario').innerHTML = `
+            Olá, ${usuario.nome} 
+            <a href="admin.html" style="background:#fbbf24;color:#1e293b;padding:4px 12px;border-radius:8px;font-size:0.8rem;font-weight:700;text-decoration:none;margin-left:8px;">
+                ⚙️ Admin
+            </a>`;
     }
+}
+    
 
     function sair() {
         localStorage.removeItem('usuario');
