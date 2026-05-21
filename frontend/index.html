@@ -196,10 +196,11 @@
 <!-- HEADER -->
 <header>
     <h1>📍 VotuFácil</h1>
-    <div style="display:flex; align-items:center; gap:16px;">
-        <span id="nome-usuario"></span>
-        <button class="btn-sair" onclick="sair()">Sair</button>
-    </div>
+<div style="display:flex; align-items:center; gap:16px;">
+    <span id="nome-usuario"></span>
+    <span id="btn-admin"></span>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+</div>
 </header>
 
 <!-- BUSCA -->
@@ -230,6 +231,12 @@
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     if (usuario.nome) {
     document.getElementById('nome-usuario').textContent = `Olá, ${usuario.nome}`;
+    if (usuario.tipo_perfil === 'admin') {
+        document.getElementById('btn-admin').innerHTML = `
+            <a href="admin.html" style="background:#fbbf24;color:#1e293b;padding:6px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;text-decoration:none;">
+                ⚙️ Admin
+            </a>`;
+    }
     if (usuario.tipo_perfil === 'admin') {
         document.getElementById('nome-usuario').innerHTML = `
             Olá, ${usuario.nome} 
