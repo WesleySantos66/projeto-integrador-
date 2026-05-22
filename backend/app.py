@@ -67,16 +67,19 @@ def cadastrar_usuario():
     dados = request.get_json()
     if Usuario.query.filter_by(email=dados['email']).first():
         return jsonify({'erro': 'Email já cadastrado!'}), 400
+    tipo = dados.get('tipo_perfil', 'usuario')
+    if tipo == 'admin':
+        tipo = 'usuario'
+
     novo_usuario = Usuario(
         nome=dados['nome'],
         email=dados['email'],
         senha_hash=generate_password_hash(dados['senha']),
-        tipo_perfil=dados.get('tipo_perfil', 'usuario')
+        tipo_perfil=tipo
     )
     db.session.add(novo_usuario)
     db.session.commit()
     return jsonify({'mensagem': 'Usuário cadastrado com sucesso!', 'id': novo_usuario.id_usuario}), 201
-
 @app.route('/usuarios/login', methods=['POST'])
 def login():
     dados = request.get_json()
